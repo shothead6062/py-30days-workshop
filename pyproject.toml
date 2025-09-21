@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "awesome-app"
+dynamic = ["version"]
+description = ""
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = "MIT"
+keywords = []
+authors = [{ name = "clarke", email = "shothead6062@gmail.com" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "requests>=2.32,<3",
+  "numpy~=1.26",
+]
+
+[project.scripts]
+demo-app = "demo_app.main:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<9",
+  "ruff==0.6.*",
+  "mypy~=1.11",
+  "nox>=2024.4.15",  # Day 8：任務自動化/多版本測試
+]
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+]
+
+[project.urls]
+Documentation = "https://github.com/clarke/demo-app#readme"
+Issues = "https://github.com/clarke/demo-app/issues"
+Source = "https://github.com/clarke/demo-app"
+
+# 動態版本來源
+[tool.hatch.version]
+path = "src/demo_app/__about__.py"
+
+# 打包路徑
+[tool.hatch.build.targets.wheel]
+packages = ["src/demo_app"]
+
+# 預設環境：使用 uv + 開啟 dev extras
+[tool.hatch.envs.default]
+features = ["dev"]
+
+[tool.hatch.envs.default.env-vars]
+PYTHONPATH = "src"
+
+# Day 8：集中入口的一鍵工作流（不引入 Day 9 的 Black）
+[tool.hatch.envs.default.scripts]
+start = "python -m demo_app.main"
+test = "pytest -q"
+lint = "ruff check ."
+format = "ruff format ."
+typecheck = "mypy src/"
+
+# 一鍵總檢（lint → 格式檢查 → 型別 → 測試）
+check-all = [
+  "ruff check .",
+  "ruff format --check .",
+  "mypy src/",
+  "pytest -q",
+]
+
+# CI 入口：交給 nox（內含多 Python 版本/任務自動化）
+ci = "nox"
+
+# 文件環境（如需）
+[tool.hatch.envs.docs]
+features = ["docs"]
+
+# 額外實驗環境（僅 Hatch 內使用）
+[tool.hatch.envs.experiment]
+extra-dependencies = ["rich", "httpx"]
