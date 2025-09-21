@@ -31,8 +31,10 @@ demo-app = "demo_app.main:main"
 dev = [
   "pytest>=8.3,<9",
   "ruff==0.6.*",
+  "black~=24.8",
   "mypy~=1.11",
-  "nox>=2024.4.15",  # Day 8：任務自動化/多版本測試
+  "nox>=2024.4.15",
+  "pre-commit>=3.6,<4",
 ]
 docs = [
   "mkdocs",
@@ -63,20 +65,34 @@ PYTHONPATH = "src"
 [tool.hatch.envs.default.scripts]
 start = "python -m demo_app.main"
 test = "pytest -q"
-lint = "ruff check ."
-format = "ruff format ."
+ lint = "ruff check ."
+format = "black ."
 typecheck = "mypy src/"
 
 # 一鍵總檢（lint → 格式檢查 → 型別 → 測試）
 check-all = [
+  "black --check .",
   "ruff check .",
-  "ruff format --check .",
   "mypy src/",
   "pytest -q",
 ]
 
 # CI 入口：交給 nox（內含多 Python 版本/任務自動化）
 ci = "nox"
+
+# Day 9：格式化與檢查的便捷指令
+fmt = [
+  "black .",
+  "ruff check --fix .",
+]
+check = [
+  "black --check .",
+  "ruff check .",
+]
+
+# pre-commit 便捷指令
+pre-commit-install = "pre-commit install"
+pre-commit-run = "pre-commit run --all-files"
 
 # 文件環境（如需）
 [tool.hatch.envs.docs]
@@ -85,3 +101,21 @@ features = ["docs"]
 # 額外實驗環境（僅 Hatch 內使用）
 [tool.hatch.envs.experiment]
 extra-dependencies = ["rich", "httpx"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E203"]
+exclude = ["build", "dist", ".venv"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["demo_app"]
+combine-as-imports = true
+force-sort-within-sections = true

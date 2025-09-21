@@ -28,7 +28,7 @@ hatch run start
 - Lint：`hatch run lint`
 - 格式化：`hatch run format`
 - 型別檢查：`hatch run typecheck`
-- 總檢（lint → format --check → mypy → pytest）：`hatch run check-all`
+- 總檢（black --check → ruff check → mypy → pytest）：`hatch run check-all`
 - CI 一鍵（Nox）：`hatch run ci`
 
 ---
@@ -36,7 +36,7 @@ hatch run start
 ### Nox 工作流（Day 8）
 Nox 負責把測試與檢查流程編排成可重複執行的任務：
 - `tests-3.11`、`tests-3.12`：執行測試（目前設定為重用 Hatch 環境，方便在無網路時執行）
-- `lint`：`ruff check`、`ruff format --check`、`mypy src/`
+- `lint`：`black --check`、`ruff check .`、`mypy src/`
 
 執行全部 session：
 ```
@@ -44,6 +44,23 @@ hatch run ci
 ```
 
 如需真正跨 Python 版本矩陣測試，可將 noxfile.py 改為建立獨立 venv 並指定 `python=["3.11", "3.12"]`，同時在系統安裝對應直譯器（例如透過 pyenv）。
+
+---
+
+### pre-commit（程式碼風格把關）
+已內建於 dev 依賴，並透過本機 hooks 直接呼叫 Hatch scripts：
+
+`.pre-commit-config.yaml` 會執行：
+- `hatch run fmt`（black .、ruff check --fix .）
+- `hatch run check`（black --check .、ruff check .）
+
+啟用方式：
+```
+hatch run pre-commit-install
+hatch run pre-commit-run   # 對所有檔案跑一次
+```
+
+之後每次 `git commit`，pre-commit 都會在你的 Hatch 環境中自動檢查與修正。
 
 ---
 
