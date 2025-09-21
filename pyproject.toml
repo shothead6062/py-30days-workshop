@@ -35,6 +35,9 @@ dev = [
   "mypy~=1.11",
   "nox>=2024.4.15",
   "pre-commit>=3.6,<4",
+  "pyright>=1.1.375",
+  "pydantic>=2.8",
+  "pydantic-settings>=2.3",
 ]
 docs = [
   "mkdocs",
@@ -65,9 +68,15 @@ PYTHONPATH = "src"
 [tool.hatch.envs.default.scripts]
 start = "python -m demo_app.main"
 test = "pytest -q"
- lint = "ruff check ."
+lint = "ruff check ."
 format = "black ."
-typecheck = "mypy src/"
+ type-pyright = "pyright ."
+ type-mypy = "mypy ."
+ typecheck = [
+  "pyright .",
+  "mypy src/",
+]
+contracts = "pytest -q tests/contracts"
 
 # 一鍵總檢（lint → 格式檢查 → 型別 → 測試）
 check-all = [
@@ -82,8 +91,8 @@ ci = "nox"
 
 # Day 9：格式化與檢查的便捷指令
 fmt = [
-  "black .",
   "ruff check --fix .",
+  "black .",
 ]
 check = [
   "black --check .",
@@ -93,6 +102,20 @@ check = [
 # pre-commit 便捷指令
 pre-commit-install = "pre-commit install"
 pre-commit-run = "pre-commit run --all-files"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "warning"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+disallow_any_generics = true
+plugins = ["pydantic.mypy"]
 
 # 文件環境（如需）
 [tool.hatch.envs.docs]

@@ -33,10 +33,29 @@ hatch run start
 
 ---
 
-### Nox 工作流（Day 8）
+### 實際執行指南（How to Run）
+- 進入環境：`hatch shell`
+- 執行應用：`hatch run start`
+- 單元測試：`hatch run test`
+- 風格自動修正：`hatch run fmt`
+- 僅檢查（CI 友好）：`hatch run check`
+- 型別檢查（Pyright + mypy）：`hatch run typecheck`
+- 契約測試（Pydantic 邊界）：`hatch run contracts`
+- 一鍵 CI（Nox 全部 session）：`hatch run ci`
+
+常見情境
+- 只跑合約測試：`pytest -q tests/contracts`
+- 只跑 3.12 測試：`nox -s tests-3.12`（或 `hatch run ci` 跑全部）
+- 本地全自動修：`nox -s fmt`（Ruff 修正 → Black 排版）
+
+---
+
+### Nox 工作流（Day 8–10）
 Nox 負責把測試與檢查流程編排成可重複執行的任務：
 - `tests-3.11`、`tests-3.12`：執行測試（目前設定為重用 Hatch 環境，方便在無網路時執行）
 - `lint`：`black --check`、`ruff check .`、`mypy src/`
+- `typecheck`（Day 10）：`pyright .`、`mypy .`
+- `contracts`（Day 10）：`pytest -q tests/contracts`
 
 執行全部 session：
 ```
@@ -47,12 +66,24 @@ hatch run ci
 
 ---
 
-### pre-commit（程式碼風格把關）
+### 型別檢查與資料契約（Day 10）
+本機與 CI 一致的型別與契約檢查：
+
+- 本機（Hatch）
+  - `hatch run typecheck`（pyright + mypy）
+  - `hatch run test`（包含 contracts 測試 `tests/contracts/`）
+- Nox（CI）
+  - `hatch run ci` 會一併執行 `typecheck` 與 `contracts` sessions
+
+---
+
+### pre-commit（程式碼風格與型別把關）
 已內建於 dev 依賴，並透過本機 hooks 直接呼叫 Hatch scripts：
 
 `.pre-commit-config.yaml` 會執行：
 - `hatch run fmt`（black .、ruff check --fix .）
 - `hatch run check`（black --check .、ruff check .）
+- `hatch run typecheck`（basedpyright .、mypy .）
 
 啟用方式：
 ```
@@ -68,15 +99,23 @@ hatch run pre-commit-run   # 對所有檔案跑一次
 ```
 ./
 ├─ pyproject.toml            # 專案設定、依賴、Hatch scripts
-├─ noxfile.py                # Nox 工作流（tests-3.11 / tests-3.12 / lint）
+├─ noxfile.py                # Nox 工作流（fmt/style/lint/typecheck/contracts/tests-3.11/3.12）
 ├─ src/
 │  └─ demo_app/
 │     ├─ __about__.py        # 動態版本來源 __version__
 │     ├─ __init__.py
-│     └─ main.py             # 範例主程式（hatch run start）
+│     ├─ main.py             # 範例主程式（hatch run start）
+│     ├─ contracts.py        # Pydantic v2 契約（User/PasswordPair、validate_user）
+│     ├─ cli_args.py         # CLI 參數解析 → Pydantic 驗證
+│     └─ settings.py         # pydantic-settings：讀取 APP_* 環境變數
 └─ tests/
    ├─ __init__.py
-   └─ test_main.py           # 測試 main() 回傳 0
+   ├─ test_main.py           # 測試 main() 回傳 0
+   └─ contracts/             # 契約與邊界測試
+      ├─ test_contracts.py   # User 驗證成功/失敗案例
+      ├─ test_cli_args.py    # CLI 參數邊界驗證
+      ├─ test_settings.py    # 環境變數設定驗證
+      └─ test_typeadapter.py # TypeAdapter 範例
 ```
 
 ---
@@ -97,6 +136,9 @@ hatch build
 - Nox 找不到 Python 版本：
   - 目前範例已改為重用 Hatch 環境（`venv_backend="none"`），避免安裝流程受網路影響。
   - 若改回多版本矩陣，需安裝對應直譯器並確保可安裝依賴。
+- IDE 顯示「無法解析匯入」：
+  - 讓 IDE Interpreter 指向 `hatch run python -c "import sys; print(sys.executable)"` 的路徑。
+  - 或改在 CLI 驗證：`hatch run pyright .`、`hatch run mypy src/`。
 
 ---
 

@@ -12,8 +12,8 @@ def fmt(session: nox.Session) -> None:
     - Black: format
     - Ruff:  auto-fix (含 import 排序 I 規則，若你改用 isort，這裡請調整)
     """
-    session.run("black", ".")
     session.run("ruff", "check", "--fix", ".")
+    session.run("black", ".")
 
 
 @nox.session(name="style", venv_backend="none")
@@ -38,6 +38,19 @@ def lint(session: nox.Session) -> None:
     session.run("black", "--check", ".")
     session.run("ruff", "check", ".")
     session.run("mypy", "src/")
+
+
+@nox.session(name="typecheck", venv_backend="none")
+def typecheck(session: nox.Session) -> None:
+    """Run static type checks (basedpyright + mypy) using current Hatch env."""
+    session.run("pyright", ".")
+    session.run("mypy", "src/")
+
+
+@nox.session(name="contracts", venv_backend="none")
+def contracts(session: nox.Session) -> None:
+    """Run contract tests (Pydantic models)."""
+    session.run("pytest", "-q", "tests/contracts")
 
 
 @nox.session(name="tests-3.11", venv_backend="none")
