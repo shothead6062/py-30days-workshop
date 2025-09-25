@@ -69,3 +69,15 @@ def tests_312(session: nox.Session) -> None:
     建議在 CI job 裡用 setup-python matrix 指定 3.12 再呼叫此 session。
     """
     session.run("pytest", "-q")
+
+
+@nox.session(name="tests", venv_backend="none")
+def tests(session: nox.Session) -> None:
+    """Run tests with coverage threshold (uses pytest.ini addopts)."""
+    session.run("pytest")
+
+
+@nox.session(name="test", venv_backend="none")
+def test(session: nox.Session) -> None:
+    """Alias of `tests` for convenience (nox -s test)."""
+    session.run("pytest")

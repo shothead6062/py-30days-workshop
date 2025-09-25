@@ -24,3 +24,12 @@ repos:
         args: ["run", "typecheck"]
         types: [python]
         pass_filenames: false
+
+      # 建議在 push 時跑完整測試（含 coverage gate）
+      - id: hatch-tests
+        name: hatch tests (with coverage gate)
+        entry: hatch
+        language: system
+        args: ["run", "test-all"]
+        stages: [push]
+        pass_filenames: false
