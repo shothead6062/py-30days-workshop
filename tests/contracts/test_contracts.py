@@ -1,6 +1,7 @@
 from demo_app.contracts import ValidationError, validate_user
 
 
+# test message
 def test_validate_user_ok():
     data = {"id": 1, "username": "alice", "email": "a@example.com", "role": "staff"}
     user = validate_user(data)
